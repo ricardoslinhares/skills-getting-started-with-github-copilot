@@ -20,11 +20,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
+        let participantsHTML = "";
+        if (details.participants.length > 0) {
+          participantsHTML = `
+            <div class="participants">
+              <h5>Participants</h5>
+              <ul>
+                ${details.participants
+                  .map(
+                    (participant) => `
+                  <li>
+                    <span class="participant-avatar">${getInitials(participant)}</span>
+                    <span class="participant-name">${participant}</span>
+                  </li>
+                `
+                  )
+                  .join("")}
+              </ul>
+            </div>
+          `;
+        }
+
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          ${participantsHTML}
         `;
 
         activitiesList.appendChild(activityCard);
@@ -39,6 +61,16 @@ document.addEventListener("DOMContentLoaded", () => {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
       console.error("Error fetching activities:", error);
     }
+  }
+
+  // Helper function to extract initials from a name/email
+  function getInitials(nameOrEmail) {
+    const name = nameOrEmail.split("@")[0]; // Remove email domain if present
+    const parts = name.split(/[._-]/); // Split by common separators
+    return parts
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("");
   }
 
   // Handle form submission
