@@ -4,6 +4,48 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
+  // Function to handle delete participant
+  async function handleDeleteParticipant(event) {
+    event.preventDefault();
+    const button = event.target.closest(".delete-participant");
+    if (!button) return;
+
+    const activity = button.getAttribute("data-activity");
+    const email = button.getAttribute("data-email");
+
+    try {
+      const response = await fetch(
+        `/activities/${encodeURIComponent(activity)}/unregister?email=${encodeURIComponent(email)}`,
+        {
+          method: "POST",
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        messageDiv.textContent = result.message;
+        messageDiv.className = "success message";
+        messageDiv.classList.remove("hidden");
+        
+        // Refresh activities
+        setTimeout(() => {
+          fetchActivities();
+          messageDiv.classList.add("hidden");
+        }, 1500);
+      } else {
+        messageDiv.textContent = result.detail || "An error occurred";
+        messageDiv.className = "error message";
+        messageDiv.classList.remove("hidden");
+      }
+    } catch (error) {
+      messageDiv.textContent = "Failed to unregister. Please try again.";
+      messageDiv.className = "error message";
+      messageDiv.classList.remove("hidden");
+      console.error("Error unregistering:", error);
+    }
+  }
+
   // Function to fetch activities from API
   async function fetchActivities() {
     try {
@@ -32,6 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
                   <li>
                     <span class="participant-avatar">${getInitials(participant)}</span>
                     <span class="participant-name">${participant}</span>
+                    <button class="delete-participant" data-activity="${name}" data-email="${participant}" title="Remove participant">
+                      <span class="delete-icon">✕</span>
+                    </button>
                   </li>
                 `
                   )
@@ -56,6 +101,11 @@ document.addEventListener("DOMContentLoaded", () => {
         option.value = name;
         option.textContent = name;
         activitySelect.appendChild(option);
+      });
+
+      // Add event listeners for delete buttons
+      document.querySelectorAll(".delete-participant").forEach((button) => {
+        button.addEventListener("click", handleDeleteParticipant);
       });
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
